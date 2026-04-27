@@ -1,64 +1,126 @@
-import Image from "next/image";
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { fetchBookmarks } from '@/lib/instapaper';
+import { logout } from '@/app/actions';
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('instapaper_token')?.value;
+  const secret = cookieStore.get('instapaper_secret')?.value;
+
+  if (!token || !secret) {
+    redirect('/login');
+  }
+
+  // Await searchParams before using it
+  const sp = await searchParams;
+  const filter = sp.filter === 'archive' ? 'archive' : 'unread';
+
+  let bookmarks: any[] = [];
+  let user: any = null;
+  let error: string | null = null;
+
+  try {
+    const data = await fetchBookmarks(token, secret, filter, 100);
+    // Data is an array of objects mixed with type="user" and type="bookmark"
+    user = data.find((item: any) => item.type === 'user');
+    bookmarks = data.filter((item: any) => item.type === 'bookmark');
+  } catch (err: any) {
+    error = err.message;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-zinc-950 text-white font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
+      <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center">
+        <h1 className="text-xl font-semibold tracking-tight">Kindle Instapaper</h1>
+        <div className="flex items-center gap-6">
+          <span className="text-zinc-400 text-sm hidden sm:inline-block">
+            {user ? user.username : 'Logged in'}
+          </span>
+          <form action={logout}>
+            <button type="submit" className="text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors">
+              Sign out
+            </button>
+          </form>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+          <h2 className="text-3xl font-bold tracking-tight">Your Articles</h2>
+          
+          <div className="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+            <a
+              href="?filter=unread"
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                filter === 'unread' 
+                  ? 'bg-zinc-800 text-white shadow-sm' 
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              Unread
+            </a>
+            <a
+              href="?filter=archive"
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                filter === 'archive' 
+                  ? 'bg-zinc-800 text-white shadow-sm' 
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              Archive
+            </a>
+          </div>
         </div>
+
+        {error ? (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-red-400">
+            <p className="font-medium">Failed to load articles.</p>
+            <p className="text-sm opacity-80 mt-1">{error}</p>
+          </div>
+        ) : bookmarks.length === 0 ? (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-12 text-center text-zinc-400">
+            <p>No {filter} articles found.</p>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {bookmarks.map((bookmark) => (
+              <a
+                key={bookmark.bookmark_id}
+                href={bookmark.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group block bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+              >
+                <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-2 mb-2">
+                  {bookmark.title || 'Untitled Article'}
+                </h3>
+                
+                {bookmark.description && (
+                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 leading-relaxed">
+                    {bookmark.description}
+                  </p>
+                )}
+                
+                <div className="flex items-center gap-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                  <span className="truncate max-w-[200px]">
+                    {new URL(bookmark.url).hostname.replace('www.', '')}
+                  </span>
+                  {bookmark.time && (
+                    <>
+                      <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
+                      <span>{new Date(bookmark.time * 1000).toLocaleDateString()}</span>
+                    </>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
