@@ -36,7 +36,7 @@ export default async function Home({
   return (
     <div className="min-h-screen bg-zinc-950 text-white font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
       <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center">
-        <h1 className="text-xl font-semibold tracking-tight">Kindle Instapaper</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Instapaper to Kindle</h1>
         <div className="flex items-center gap-6">
           <span className="text-zinc-400 text-sm hidden sm:inline-block">
             {user ? user.username : 'Logged in'}
