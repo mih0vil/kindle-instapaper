@@ -47,6 +47,7 @@
 
 * There should be a button "Send new articles to Kindle" on the main page.
 * When user clicks on "Send new articles to Kindle" button, application should send 20 unread articles to Kindle.
+    * Make environment variable for number of articles to send in bulk. Default value should be 20.
 * This action should be a POST route named /api/send-bulk-to-kindle and should return the date of the newest article
 * The title of the email should be "Instapaper yyyy-mm-dd" where yyyy-mm-dd is the date of newest article
 * All articles should be combined into one email and sent as a single HTML file. 

@@ -36,8 +36,10 @@ export async function POST() {
       return NextResponse.json({ error: 'Kindle email not configured' }, { status: 500 });
     }
 
-    // Fetch up to 20 unread bookmarks
-    const data: InstapaperItem[] = await fetchBookmarks(token, secret, 'unread', 20);
+    const bulkLimit = parseInt(process.env.BULK_SEND_LIMIT || '20', 10);
+
+    // Fetch number of unread bookmarks
+    const data: InstapaperItem[] = await fetchBookmarks(token, secret, 'unread', bulkLimit);
     const bookmarks = data.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
 
     if (bookmarks.length === 0) {
