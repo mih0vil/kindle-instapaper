@@ -147,6 +147,13 @@ export async function archiveAction(bookmarkId: string) {
 }
 
 /**
+ * Revalidates the home page articles list.
+ */
+export async function refreshArticles() {
+  revalidatePath('/');
+}
+
+/**
  * Server action to unarchive a bookmark.
  * 
  * @param bookmarkId - The ID of the bookmark to unarchive

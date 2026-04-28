@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getOldBookmarks, archiveAction } from '@/app/actions';
+import { getOldBookmarks, refreshArticles } from '@/app/actions';
 
 /**
  * Form component for archiving old articles in batch with progress tracking.
@@ -52,9 +52,21 @@ export function ArchiveOldForm() {
       for (let i = 0; i < bookmarksToArchive.length; i++) {
         const bookmark = bookmarksToArchive[i];
         setCurrentTitle(bookmark.title);
-        await archiveAction(bookmark.id);
+        
+        const response = await fetch('/api/archive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bookmarkId: bookmark.id }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to archive: ${bookmark.title}`);
+        }
+
         setCurrent(i + 1);
       }
+
+      await refreshArticles();
 
       setStatus('success');
       setMessage(`Successfully archived ${bookmarksToArchive.length} articles.`);
