@@ -99,7 +99,7 @@ export default async function Home({
             {bookmarks.map((bookmark) => (
               <div key={bookmark.bookmark_id} className="group relative">
                 <Link
-                  href={`/article/${bookmark.bookmark_id}`}
+                  href={`/article/${bookmark.bookmark_id}?from=${filter}`}
                   className="block bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
                 >
                   <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-2 mb-2 pr-24">

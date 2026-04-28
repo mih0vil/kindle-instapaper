@@ -28,7 +28,7 @@
     * description
     * publication date
     * article content
-* User should be able to navigate back using an arrow button on the top of the page
+* User should be able to navigate back using an arrow button on the top of the page. When navigating back, app should show previous page user was remembering if it was list of unread or archive articles
 * User should be able to send an article to Kindle using "Send to Kindle" button
 * User should be able to archive an unread article.
     * This action should remove the article from the unread list and add it to the archive list

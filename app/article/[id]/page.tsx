@@ -10,13 +10,19 @@ import { ArchiveButton } from '@/components/ArchiveButton';
  * Displays the full content and metadata of a specific Instapaper bookmark.
  * 
  * @param params - URL parameters containing the bookmark ID
+ * @param searchParams - URL search parameters containing navigation context
  */
 export default async function ArticlePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const from = sp.from === 'archive' ? 'archive' : 'unread';
+  
   const cookieStore = await cookies();
   const token = cookieStore.get('instapaper_token')?.value;
   const secret = cookieStore.get('instapaper_secret')?.value;
@@ -63,7 +69,7 @@ export default async function ArticlePage({
       <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center gap-4">
           <Link 
-            href="/" 
+            href={`/?filter=${from}`} 
             className="p-2 hover:bg-zinc-900 rounded-full transition-colors group"
             aria-label="Back to articles"
           >
