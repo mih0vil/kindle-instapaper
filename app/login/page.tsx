@@ -1,11 +1,6 @@
 import { login } from '@/app/actions';
 
-import { cookies } from 'next/headers';
-
 export default async function LoginPage() {
-  const cookieStore = await cookies();
-  const savedUsername = cookieStore.get('instapaper_username')?.value || '';
-  const savedPassword = cookieStore.get('instapaper_password')?.value || '';
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
@@ -25,7 +20,6 @@ export default async function LoginPage() {
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               required
               placeholder="you@example.com"
-              defaultValue={savedUsername}
             />
           </div>
           <div>
@@ -37,7 +31,6 @@ export default async function LoginPage() {
               id="password"
               name="password"
               className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              defaultValue={savedPassword}
             />
           </div>
           

@@ -9,11 +9,10 @@
     * Secrets for Instapaper API should be stored in .env file
     * .env file should not be commited to version control
 
-# Remember username and password for login
+# User stays logged in
 
-* Application should remember username and password for login
-* Application should use cookies to store username and password
-* User should stay logged in until he logs out
+* Application should not save username and password because this is a security issue
+* User should stay logged in until he logs out manually
 
 # Title of the application should be "Instapaper to Kindle"
 

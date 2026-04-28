@@ -58,8 +58,6 @@ export async function login(formData: FormData) {
     const cookieStore = await cookies();
     cookieStore.set('instapaper_token', token, { httpOnly: true, secure: true });
     cookieStore.set('instapaper_secret', secret, { httpOnly: true, secure: true });
-    cookieStore.set('instapaper_username', username, { httpOnly: true, secure: true });
-    if (password) cookieStore.set('instapaper_password', password, { httpOnly: true, secure: true });
 
   } catch (error) {
     return { error: 'An unexpected error occurred' };
@@ -72,7 +70,5 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete('instapaper_token');
   cookieStore.delete('instapaper_secret');
-  cookieStore.delete('instapaper_username');
-  cookieStore.delete('instapaper_password');
   redirect('/login');
 }
