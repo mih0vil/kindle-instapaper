@@ -33,3 +33,12 @@
 * User should be able to archive an unread article.
     * This action should remove the article from the unread list and add it to the archive list
 * User should be able to unarchive an archived article.
+
+# Archive old articles
+
+* On the main page above the list of article, there should be a button "Archive old articles" and input field for date
+* When user clicks on "Archive old articles" button, application should archive all articles older than the date in the input field
+* The input date should be pre-filled with today's date minus 3 months
+* There should be a date picker for selecting the date and user should be able to enter the date manually.
+* User should be able to select a date and then click "Archive old articles" button to archive articles older than the selected date.
+* When user clicks on "Archive old articles" button, application should show a modal with the progress bar displaying total number of articles to be archived and number of articles archived so far.

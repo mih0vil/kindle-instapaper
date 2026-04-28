@@ -3,7 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { instapaperOauth, INSTAPAPER_API_URL, getBookmarkText, archiveBookmark, unarchiveBookmark } from '@/lib/instapaper';
+import { instapaperOauth, INSTAPAPER_API_URL, getBookmarkText, archiveBookmark, unarchiveBookmark, fetchBookmarks, InstapaperBookmark } from '@/lib/instapaper';
 import { sendEmailToKindle } from '@/lib/postmark';
 
 /**
@@ -168,6 +168,85 @@ export async function unarchiveAction(bookmarkId: string) {
   } catch (error: unknown) {
     console.error('Failed to unarchive:', error);
     const message = error instanceof Error ? error.message : 'Failed to unarchive';
+    return { error: message };
+  }
+}
+
+/**
+ * Server action to archive articles older than a specific date.
+ * 
+ * @param date - The date to compare against
+ * @returns Success or error message
+ */
+export async function archiveOldArticles(date: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('instapaper_token')?.value;
+  const secret = cookieStore.get('instapaper_secret')?.value;
+
+  if (!token || !secret) {
+    return { error: 'Not authenticated' };
+  }
+
+  try {
+    const thresholdDate = new Date(date);
+    const thresholdTimestamp = Math.floor(thresholdDate.getTime() / 1000);
+
+    // Fetch up to 500 unread bookmarks (Instapaper limit per request)
+    const items = await fetchBookmarks(token, secret, 'unread', 500);
+    const bookmarks = items.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
+
+    const oldBookmarks = bookmarks.filter(b => b.time < thresholdTimestamp);
+
+    if (oldBookmarks.length === 0) {
+      return { success: true, count: 0 };
+    }
+
+    // Archive them one by one
+    // Note: In a production app with many articles, we might want to handle rate limits or use a queue
+    for (const b of oldBookmarks) {
+      await archiveBookmark(token, secret, b.bookmark_id.toString());
+    }
+
+    revalidatePath('/');
+    return { success: true, count: oldBookmarks.length };
+  } catch (error: unknown) {
+    console.error('Failed to archive old articles:', error);
+    const message = error instanceof Error ? error.message : 'Failed to archive old articles';
+    return { error: message };
+  }
+}
+
+/**
+ * Fetches unread bookmarks older than a specific date.
+ * Useful for batch processing on the client side with progress tracking.
+ * 
+ * @param date - The date to compare against
+ * @returns List of bookmark IDs and titles
+ */
+export async function getOldBookmarks(date: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('instapaper_token')?.value;
+  const secret = cookieStore.get('instapaper_secret')?.value;
+
+  if (!token || !secret) {
+    return { error: 'Not authenticated' };
+  }
+
+  try {
+    const thresholdDate = new Date(date);
+    const thresholdTimestamp = Math.floor(thresholdDate.getTime() / 1000);
+
+    const items = await fetchBookmarks(token, secret, 'unread', 500);
+    const bookmarks = items.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
+
+    const oldBookmarks = bookmarks
+      .filter(b => b.time < thresholdTimestamp)
+      .map(b => ({ id: b.bookmark_id.toString(), title: b.title }));
+
+    return { bookmarks: oldBookmarks };
+  } catch (error: unknown) {
+    console.error('Failed to fetch old articles:', error);
+    const message = error instanceof Error ? error.message : 'Failed to fetch old articles';
     return { error: message };
   }
 }
