@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Sending articles from Instapaper to Kindle
 
-## Getting Started
+This is a web application that sends articles from Instapaper to Kindle and manages Instapaper articles.
 
-First, run the development server:
+## Motivation
+
+Kindle can be used for reading articles, not just books. The most convenient way to read articles on Kindle is to add them to Instapaper, then send them to Kindle via email. 
+Previously, Instapaper had a feature to send these articles to Kindle, but recently they introduced a paywall. So I decided to create this web application to send articles from Instapaper to Kindle for free. 
+
+## Vibe coding
+
+This was also an opportunity to try vibe coding for the first time using Google Antigravity. I am using free version of Google LLM models.
+In my experience, Gemini 3.1 pro was not working because of overload on free tier. I switched to lighter Gemini Flash models and it happened to work better.
+LLM was not working all the time as it was also overloaded, but I would click retry and it would eventually work.
+My prompts were not so apstract as I have experience in programming and I was afraid that ligther LLM model would not work so good but in general, as it is a free version, I am satisified and I managed to create what I wanted.
+
+## Features
+
+- List Instapaper articles
+- Send Instapaper articles to Kindle
+- Archive Instapaper articles
+- Unarchive Instapaper articles
+- Send bulk articles to Kindle
+- Archive old articles
+
+## Tech stack
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Postmark for sending emails
+- Instapaper API for fetching and managing articles
+
+## DEV Setup
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Usage
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3235](http://localhost:3235) with your browser to see the result.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API keys
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+You need to get an API key from [Instapaper](https://www.instapaper.com/developers/applications)
+You also need API key for Postmark to send emails. You can get it from [Postmark](https://postmarkapp.com/) and for this you need to have email address on your own domain, not on gmail or other free email providers.
+As for Kindle, your need to know email address of your Kindle device and allow sending email from Postmark to your Kindle email address.
