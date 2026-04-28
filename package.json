@@ -11,6 +11,7 @@
   "dependencies": {
     "next": "16.2.4",
     "oauth-1.0a": "^2.2.6",
+    "postmark": "^4.0.7",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },

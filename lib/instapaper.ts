@@ -1,7 +1,41 @@
 import OAuth from 'oauth-1.0a';
 import crypto from 'crypto';
 
+/**
+ * Represents a bookmark from Instapaper.
+ */
+export interface InstapaperBookmark {
+  type: 'bookmark';
+  bookmark_id: number;
+  url: string;
+  title: string;
+  description: string;
+  time: number;
+  progress: number;
+  progress_timestamp: number;
+  private_source: string;
+  hash: string;
+}
 
+/**
+ * Represents user data returned by Instapaper API.
+ */
+export interface InstapaperUser {
+  type: 'user';
+  user_id: number;
+  username: string;
+  subscription_is_active: string;
+}
+
+/**
+ * Union type for items returned by the Instapaper bookmarks list endpoint.
+ */
+export type InstapaperItem = InstapaperBookmark | InstapaperUser;
+
+
+/**
+ * OAuth client for Instapaper API.
+ */
 export const instapaperOauth = new OAuth({
   consumer: {
     key: process.env.INSTAPAPER_CONSUMER_KEY || '',
@@ -13,9 +47,21 @@ export const instapaperOauth = new OAuth({
   },
 });
 
+/**
+ * Base URL for the Instapaper API v1.
+ */
 export const INSTAPAPER_API_URL = 'https://www.instapaper.com/api/1';
 
-export async function fetchBookmarks(token: string, secret: string, folder_id: 'unread' | 'archive', limit: number = 100) {
+/**
+ * Fetches bookmarks from a specific folder.
+ * 
+ * @param token - User's OAuth token
+ * @param secret - User's OAuth secret
+ * @param folder_id - The folder to fetch bookmarks from ('unread', 'archive', etc.)
+ * @param limit - Maximum number of bookmarks to fetch (max 500)
+ * @returns Promise with bookmark data
+ */
+export async function fetchBookmarks(token: string, secret: string, folder_id: 'unread' | 'archive', limit: number = 100): Promise<InstapaperItem[]> {
   const requestData = {
     url: `${INSTAPAPER_API_URL}/bookmarks/list`,
     method: 'POST',
@@ -54,6 +100,14 @@ export async function fetchBookmarks(token: string, secret: string, folder_id: '
   return response.json();
 }
 
+/**
+ * Fetches the processed text content of a bookmark.
+ * 
+ * @param token - User's OAuth token
+ * @param secret - User's OAuth secret
+ * @param bookmark_id - The ID of the bookmark to fetch text for
+ * @returns Promise with article HTML content
+ */
 export async function getBookmarkText(token: string, secret: string, bookmark_id: string) {
   const requestData = {
     url: `${INSTAPAPER_API_URL}/bookmarks/get_text`,

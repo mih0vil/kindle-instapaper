@@ -1,5 +1,9 @@
 import { login } from '@/app/actions';
 
+/**
+ * Login page component.
+ * Displays a form for users to enter their Instapaper credentials.
+ */
 export default async function LoginPage() {
 
   return (

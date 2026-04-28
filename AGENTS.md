@@ -20,3 +20,12 @@ This is a web app that sends Instapaper articles to Kindle and manages Instapape
 - Tailwind CSS
 - postmark for sending emails
 - instapaper API for fetching and managing articles
+
+## Specification
+
+@specification.md
+
+# Coding rules
+
+* use best practices for each technology
+* each function and component should have documentation in the same file in the form of comment like JSDoc

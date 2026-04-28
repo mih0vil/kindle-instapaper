@@ -1,8 +1,15 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { fetchBookmarks, getBookmarkText } from '@/lib/instapaper';
+import { fetchBookmarks, getBookmarkText, InstapaperBookmark, InstapaperItem } from '@/lib/instapaper';
 import Link from 'next/link';
+import { KindleButton } from '@/components/KindleButton';
 
+/**
+ * Article page component.
+ * Displays the full content and metadata of a specific Instapaper bookmark.
+ * 
+ * @param params - URL parameters containing the bookmark ID
+ */
 export default async function ArticlePage({
   params,
 }: {
@@ -17,7 +24,7 @@ export default async function ArticlePage({
     redirect('/login');
   }
 
-  let bookmark: any = null;
+  let bookmark: InstapaperBookmark | null = null;
   let content: string = '';
   let error: string | null = null;
 
@@ -28,20 +35,20 @@ export default async function ArticlePage({
       fetchBookmarks(token, secret, 'archive', 500),
     ]);
 
-    const allBookmarks = [
-      ...unreadData.filter((item: any) => item.type === 'bookmark'),
-      ...archiveData.filter((item: any) => item.type === 'bookmark'),
+    const allBookmarks: InstapaperBookmark[] = [
+      ...unreadData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark'),
+      ...archiveData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark'),
     ];
 
-    bookmark = allBookmarks.find((b: any) => b.bookmark_id.toString() === id);
+    bookmark = allBookmarks.find((b) => b.bookmark_id.toString() === id) || null;
 
     if (!bookmark) {
       error = 'Article not found.';
     } else {
       content = await getBookmarkText(token, secret, id);
     }
-  } catch (err: any) {
-    error = err.message;
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : 'An unexpected error occurred';
   }
 
   return (
@@ -111,6 +118,10 @@ export default async function ArticlePage({
                   {bookmark.description}
                 </div>
               )}
+
+              <div className="flex justify-start">
+                <KindleButton bookmarkId={id} title={bookmark.title} />
+              </div>
             </header>
 
             <div 

@@ -17,6 +17,12 @@ export const metadata: Metadata = {
   description: "Send articles from Instapaper to Kindle",
 };
 
+/**
+ * Root layout component.
+ * Provides the basic HTML structure and global styles for the application.
+ * 
+ * @param children - The page content to be rendered within the layout
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

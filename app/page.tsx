@@ -1,9 +1,15 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { fetchBookmarks } from '@/lib/instapaper';
+import { fetchBookmarks, InstapaperBookmark, InstapaperUser, InstapaperItem } from '@/lib/instapaper';
 import { logout } from '@/app/actions';
 import Link from 'next/link';
 
+/**
+ * Home page component.
+ * Displays a list of unread or archived bookmarks from Instapaper.
+ * 
+ * @param searchParams - URL search parameters (filter)
+ */
 export default async function Home({
   searchParams,
 }: {
@@ -21,17 +27,17 @@ export default async function Home({
   const sp = await searchParams;
   const filter = sp.filter === 'archive' ? 'archive' : 'unread';
 
-  let bookmarks: any[] = [];
-  let user: any = null;
+  let bookmarks: InstapaperBookmark[] = [];
+  let user: InstapaperUser | null = null;
   let error: string | null = null;
 
   try {
-    const data = await fetchBookmarks(token, secret, filter, 100);
+    const data: InstapaperItem[] = await fetchBookmarks(token, secret, filter, 100);
     // Data is an array of objects mixed with type="user" and type="bookmark"
-    user = data.find((item: any) => item.type === 'user');
-    bookmarks = data.filter((item: any) => item.type === 'bookmark');
-  } catch (err: any) {
-    error = err.message;
+    user = data.find((item): item is InstapaperUser => item.type === 'user') || null;
+    bookmarks = data.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : 'An unexpected error occurred';
   }
 
   return (
