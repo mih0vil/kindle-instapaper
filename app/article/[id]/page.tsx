@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { fetchBookmarks, getBookmarkText, InstapaperBookmark, InstapaperItem } from '@/lib/instapaper';
 import Link from 'next/link';
 import { KindleButton } from '@/components/KindleButton';
+import { ArchiveButton } from '@/components/ArchiveButton';
 
 /**
  * Article page component.
@@ -27,6 +28,7 @@ export default async function ArticlePage({
   let bookmark: InstapaperBookmark | null = null;
   let content: string = '';
   let error: string | null = null;
+  let isArchived: boolean = false;
 
   try {
     // We fetch unread and archive to find the bookmark
@@ -35,12 +37,17 @@ export default async function ArticlePage({
       fetchBookmarks(token, secret, 'archive', 500),
     ]);
 
-    const allBookmarks: InstapaperBookmark[] = [
-      ...unreadData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark'),
-      ...archiveData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark'),
-    ];
+    const archiveBookmarks = archiveData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark');
+    
+    bookmark = unreadData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark')
+      .find((b) => b.bookmark_id.toString() === id) || null;
 
-    bookmark = allBookmarks.find((b) => b.bookmark_id.toString() === id) || null;
+    if (!bookmark) {
+      bookmark = archiveBookmarks.find((b) => b.bookmark_id.toString() === id) || null;
+      if (bookmark) {
+        isArchived = true;
+      }
+    }
 
     if (!bookmark) {
       error = 'Article not found.';
@@ -119,8 +126,9 @@ export default async function ArticlePage({
                 </div>
               )}
 
-              <div className="flex justify-start">
+              <div className="flex flex-wrap items-center gap-4 mb-8">
                 <KindleButton bookmarkId={id} title={bookmark.title} />
+                <ArchiveButton bookmarkId={id} isArchived={isArchived} />
               </div>
             </header>
 

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { fetchBookmarks, InstapaperBookmark, InstapaperUser, InstapaperItem } from '@/lib/instapaper';
 import { logout } from '@/app/actions';
 import Link from 'next/link';
+import { ArchiveButton } from '@/components/ArchiveButton';
 
 /**
  * Home page component.
@@ -96,33 +97,37 @@ export default async function Home({
         ) : (
           <div className="grid gap-6">
             {bookmarks.map((bookmark) => (
-              <Link
-                key={bookmark.bookmark_id}
-                href={`/article/${bookmark.bookmark_id}`}
-                className="group block bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
-              >
-                <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-2 mb-2">
-                  {bookmark.title || 'Untitled Article'}
-                </h3>
-                
-                {bookmark.description && (
-                  <p className="text-zinc-400 text-sm line-clamp-3 mb-4 leading-relaxed">
-                    {bookmark.description}
-                  </p>
-                )}
-                
-                <div className="flex items-center gap-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                  <span className="truncate max-w-[200px]">
-                    {new URL(bookmark.url).hostname.replace('www.', '')}
-                  </span>
-                  {bookmark.time && (
-                    <>
-                      <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
-                      <span>{new Date(bookmark.time * 1000).toLocaleDateString()}</span>
-                    </>
+              <div key={bookmark.bookmark_id} className="group relative">
+                <Link
+                  href={`/article/${bookmark.bookmark_id}`}
+                  className="block bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-2 mb-2 pr-24">
+                    {bookmark.title || 'Untitled Article'}
+                  </h3>
+                  
+                  {bookmark.description && (
+                    <p className="text-zinc-400 text-sm line-clamp-3 mb-4 leading-relaxed pr-10">
+                      {bookmark.description}
+                    </p>
                   )}
+                  
+                  <div className="flex items-center gap-4 text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                    <span className="truncate max-w-[200px]">
+                      {new URL(bookmark.url).hostname.replace('www.', '')}
+                    </span>
+                    {bookmark.time && (
+                      <>
+                        <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
+                        <span>{new Date(bookmark.time * 1000).toLocaleDateString()}</span>
+                      </>
+                    )}
+                  </div>
+                </Link>
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <ArchiveButton bookmarkId={bookmark.bookmark_id.toString()} isArchived={filter === 'archive'} />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

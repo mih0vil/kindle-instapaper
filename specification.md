@@ -29,4 +29,7 @@
     * publication date
     * article content
 * User should be able to navigate back using an arrow button on the top of the page
-
+* User should be able to send an article to Kindle using "Send to Kindle" button
+* User should be able to archive an unread article.
+    * This action should remove the article from the unread list and add it to the archive list
+* User should be able to unarchive an archived article.

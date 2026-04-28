@@ -2,7 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { instapaperOauth, INSTAPAPER_API_URL, getBookmarkText } from '@/lib/instapaper';
+import { revalidatePath } from 'next/cache';
+import { instapaperOauth, INSTAPAPER_API_URL, getBookmarkText, archiveBookmark, unarchiveBookmark } from '@/lib/instapaper';
 import { sendEmailToKindle } from '@/lib/postmark';
 
 /**
@@ -115,6 +116,58 @@ export async function sendToKindle(bookmarkId: string, title: string) {
   } catch (error: unknown) {
     console.error('Failed to send to Kindle:', error);
     const message = error instanceof Error ? error.message : 'Failed to send to Kindle';
+    return { error: message };
+  }
+}
+
+/**
+ * Server action to archive a bookmark.
+ * 
+ * @param bookmarkId - The ID of the bookmark to archive
+ * @returns Success or error message
+ */
+export async function archiveAction(bookmarkId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('instapaper_token')?.value;
+  const secret = cookieStore.get('instapaper_secret')?.value;
+
+  if (!token || !secret) {
+    return { error: 'Not authenticated' };
+  }
+
+  try {
+    await archiveBookmark(token, secret, bookmarkId);
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Failed to archive:', error);
+    const message = error instanceof Error ? error.message : 'Failed to archive';
+    return { error: message };
+  }
+}
+
+/**
+ * Server action to unarchive a bookmark.
+ * 
+ * @param bookmarkId - The ID of the bookmark to unarchive
+ * @returns Success or error message
+ */
+export async function unarchiveAction(bookmarkId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('instapaper_token')?.value;
+  const secret = cookieStore.get('instapaper_secret')?.value;
+
+  if (!token || !secret) {
+    return { error: 'Not authenticated' };
+  }
+
+  try {
+    await unarchiveBookmark(token, secret, bookmarkId);
+    revalidatePath('/');
+    return { success: true };
+  } catch (error: unknown) {
+    console.error('Failed to unarchive:', error);
+    const message = error instanceof Error ? error.message : 'Failed to unarchive';
     return { error: message };
   }
 }

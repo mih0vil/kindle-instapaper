@@ -143,3 +143,89 @@ export async function getBookmarkText(token: string, secret: string, bookmark_id
 
   return response.text();
 }
+
+/**
+ * Archives a bookmark.
+ * 
+ * @param token - User's OAuth token
+ * @param secret - User's OAuth secret
+ * @param bookmark_id - The ID of the bookmark to archive
+ * @returns Promise with the archived bookmark data
+ */
+export async function archiveBookmark(token: string, secret: string, bookmark_id: string) {
+  const requestData = {
+    url: `${INSTAPAPER_API_URL}/bookmarks/archive`,
+    method: 'POST',
+    data: {
+      bookmark_id,
+    },
+  };
+
+  const tokenData = {
+    key: token,
+    secret: secret,
+  };
+
+  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData, tokenData));
+
+  const body = new URLSearchParams();
+  body.append('bookmark_id', bookmark_id);
+
+  const response = await fetch(requestData.url, {
+    method: requestData.method,
+    headers: {
+      ...headers,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to archive bookmark: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Unarchives a bookmark (moves it back to unread).
+ * 
+ * @param token - User's OAuth token
+ * @param secret - User's OAuth secret
+ * @param bookmark_id - The ID of the bookmark to unarchive
+ * @returns Promise with the unarchived bookmark data
+ */
+export async function unarchiveBookmark(token: string, secret: string, bookmark_id: string) {
+  const requestData = {
+    url: `${INSTAPAPER_API_URL}/bookmarks/unarchive`,
+    method: 'POST',
+    data: {
+      bookmark_id,
+    },
+  };
+
+  const tokenData = {
+    key: token,
+    secret: secret,
+  };
+
+  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData, tokenData));
+
+  const body = new URLSearchParams();
+  body.append('bookmark_id', bookmark_id);
+
+  const response = await fetch(requestData.url, {
+    method: requestData.method,
+    headers: {
+      ...headers,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to unarchive bookmark: ${response.statusText}`);
+  }
+
+  return response.json();
+}
