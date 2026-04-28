@@ -138,7 +138,7 @@ export function ArchiveOldForm() {
           <p className="text-xs text-zinc-500 leading-relaxed italic">
             <span className="font-semibold text-zinc-400 not-italic mr-1">Note:</span>
             You should first archive old articles, because application will send bulks of unread articles to Kindle. It makes sense to send only new articles so old articles should be archived.
-            The limit is around 500 articles. If you have more unread articles, execute this action several times.
+            If you have a lot of unread articles, execute this action several times.
           </p>
         </div>
       </div>

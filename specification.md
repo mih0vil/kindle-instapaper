@@ -42,3 +42,16 @@
 * There should be a date picker for selecting the date and user should be able to enter the date manually.
 * User should be able to select a date and then click "Archive old articles" button to archive articles older than the selected date.
 * When user clicks on "Archive old articles" button, application should show a modal with the progress bar displaying total number of articles to be archived and number of articles archived so far.
+
+# Sending bulk of new articles to Kindle
+
+* There should be a button "Send new articles to Kindle" on the main page.
+* When user clicks on "Send new articles to Kindle" button, application should send 20 unread articles to Kindle.
+* This action should be a POST route named /api/send-bulk-to-kindle and should return the date of the newest article
+* The title of the email should be "Instapaper yyyy-mm-dd" where yyyy-mm-dd is the date of newest article
+* All articles should be combined into one email and sent as a single HTML file. 
+* Each article should be represented with:
+    * Title in <h1> tag
+    * Article content below title. The content should be transformed in a way that all <h1..6> tags are converted to <h2..6> tags, e.g. <h2> becomes <h3>, etc.
+* Articles in the email should be separated with a horizontal line.
+* All of this articles which are sent to Kindle should be archived. In the implementation, archive the articles after the email is sucessfully sent to Kindle.

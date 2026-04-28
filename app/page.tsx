@@ -5,6 +5,7 @@ import { logout } from '@/app/actions';
 import Link from 'next/link';
 import { ArchiveButton } from '@/components/ArchiveButton';
 import { ArchiveOldForm } from '@/components/ArchiveOldForm';
+import { SendBulkButton } from '@/components/SendBulkButton';
 
 /**
  * Home page component.
@@ -86,7 +87,12 @@ export default async function Home({
           </div>
         </div>
 
-        {filter === 'unread' && <ArchiveOldForm />}
+        {filter === 'unread' && (
+          <div className="flex flex-col gap-4 mb-10">
+            <SendBulkButton />
+            <ArchiveOldForm />
+          </div>
+        )}
 
         {error ? (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-red-400">
