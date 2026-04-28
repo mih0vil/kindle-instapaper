@@ -9,10 +9,15 @@
     * Secrets for Instapaper API should be stored in .env file
     * .env file should not be commited to version control
 
-# User stays logged in
+# Log in user
 
-* Application should not save username and password because this is a security issue
-* User should stay logged in until he logs out manually
+* Username and password should be stored in .env file
+* In case username and password are not provided in .env file, application should display login page with all fields from .env file present so that user can enter them manually. 
+    * Fields which are entered in .env files, should have values already filled
+    * Values which are entered manually, should be stored in a cookie after successful login. Only manually entered values should be stored, not values from .env file
+* If all values are present in .env file, user should be automatically logged in and login form should be skipped
+* implementation: construct a function or constant which retrieves these values from .env file or cookies and makes them available to the application. Use this across the whole application.
+* cookie is used to make it available for server components
 
 # Title of the application should be "Instapaper to Kindle"
 

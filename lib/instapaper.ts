@@ -1,5 +1,6 @@
 import OAuth from 'oauth-1.0a';
 import crypto from 'crypto';
+import { getConfig } from './config';
 
 /**
  * Represents a bookmark from Instapaper.
@@ -32,20 +33,22 @@ export interface InstapaperUser {
  */
 export type InstapaperItem = InstapaperBookmark | InstapaperUser;
 
-
 /**
- * OAuth client for Instapaper API.
+ * Creates an OAuth client for Instapaper API using dynamic configuration.
  */
-export const instapaperOauth = new OAuth({
-  consumer: {
-    key: process.env.INSTAPAPER_CONSUMER_KEY || '',
-    secret: process.env.INSTAPAPER_CONSUMER_SECRET || '',
-  },
-  signature_method: 'HMAC-SHA1',
-  hash_function(base_string, key) {
-    return crypto.createHmac('sha1', key).update(base_string).digest('base64');
-  },
-});
+export async function getOauthClient() {
+  const config = await getConfig();
+  return new OAuth({
+    consumer: {
+      key: config.INSTAPAPER_CONSUMER_KEY || '',
+      secret: config.INSTAPAPER_CONSUMER_SECRET || '',
+    },
+    signature_method: 'HMAC-SHA1',
+    hash_function(base_string, key) {
+      return crypto.createHmac('sha1', key).update(base_string).digest('base64');
+    },
+  });
+}
 
 /**
  * Base URL for the Instapaper API v1.
@@ -76,7 +79,8 @@ export async function fetchBookmarks(token: string, secret: string, folder_id: '
     secret: secret,
   };
 
-  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData, tokenData));
+  const oauth = await getOauthClient();
+  const headers = oauth.toHeader(oauth.authorize(requestData, tokenData));
 
   // Convert data to application/x-www-form-urlencoded
   const body = new URLSearchParams();
@@ -122,7 +126,8 @@ export async function getBookmarkText(token: string, secret: string, bookmark_id
     secret: secret,
   };
 
-  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData, tokenData));
+  const oauth = await getOauthClient();
+  const headers = oauth.toHeader(oauth.authorize(requestData, tokenData));
 
   const body = new URLSearchParams();
   body.append('bookmark_id', bookmark_id);
@@ -166,7 +171,8 @@ export async function archiveBookmark(token: string, secret: string, bookmark_id
     secret: secret,
   };
 
-  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData, tokenData));
+  const oauth = await getOauthClient();
+  const headers = oauth.toHeader(oauth.authorize(requestData, tokenData));
 
   const body = new URLSearchParams();
   body.append('bookmark_id', bookmark_id);
@@ -209,7 +215,8 @@ export async function unarchiveBookmark(token: string, secret: string, bookmark_
     secret: secret,
   };
 
-  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData, tokenData));
+  const oauth = await getOauthClient();
+  const headers = oauth.toHeader(oauth.authorize(requestData, tokenData));
 
   const body = new URLSearchParams();
   body.append('bookmark_id', bookmark_id);
@@ -223,9 +230,56 @@ export async function unarchiveBookmark(token: string, secret: string, bookmark_
     body: body.toString(),
   });
 
+  return response.json();
+}
+
+/**
+ * Exchanges Instapaper username and password for OAuth tokens using xAuth.
+ * 
+ * @param username - Instapaper username
+ * @param password - Instapaper password
+ * @returns Promise with tokens or error
+ */
+export async function exchangeXAuthTokens(username: string, password?: string) {
+  const requestData = {
+    url: `${INSTAPAPER_API_URL}/oauth/access_token`,
+    method: 'POST',
+    data: {
+      x_auth_username: username,
+      x_auth_password: password || '',
+      x_auth_mode: 'client_auth',
+    },
+  };
+
+  const oauth = await getOauthClient();
+  const headers = oauth.toHeader(oauth.authorize(requestData));
+
+  const body = new URLSearchParams();
+  body.append('x_auth_username', username);
+  if (password) body.append('x_auth_password', password);
+  body.append('x_auth_mode', 'client_auth');
+
+  const response = await fetch(requestData.url, {
+    method: requestData.method,
+    headers: {
+      ...headers,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
   if (!response.ok) {
-    throw new Error(`Failed to unarchive bookmark: ${response.statusText}`);
+    throw new Error(`Authentication failed: ${response.statusText}`);
   }
 
-  return response.json();
+  const text = await response.text();
+  const params = new URLSearchParams(text);
+  const token = params.get('oauth_token');
+  const secret = params.get('oauth_token_secret');
+
+  if (!token || !secret) {
+    throw new Error('Invalid response from Instapaper');
+  }
+
+  return { token, secret };
 }

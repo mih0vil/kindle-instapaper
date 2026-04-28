@@ -1,51 +1,40 @@
-import { login } from '@/app/actions';
+import { isConfigComplete } from '@/lib/config';
+import { LoginForm } from '@/components/LoginForm';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 /**
- * Login page component.
- * Displays a form for users to enter their Instapaper credentials.
+ * Login page for Instapaper to Kindle.
+ * Calculates missing configuration fields and renders the dynamic login form.
  */
 export default async function LoginPage() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('instapaper_token')?.value;
+
+  // If already logged in, redirect to home
+  if (token) {
+    redirect('/');
+  }
+
+  // Check if config is complete
+  const { missingFields } = await isConfigComplete();
+  
+  // Prepare initial values from .env for the form
+  const initialValues: Record<string, string> = {
+    INSTAPAPER_CONSUMER_KEY: process.env.INSTAPAPER_CONSUMER_KEY || '',
+    INSTAPAPER_CONSUMER_SECRET: process.env.INSTAPAPER_CONSUMER_SECRET || '',
+    INSTAPAPER_USERNAME: process.env.INSTAPAPER_USERNAME || '',
+    INSTAPAPER_PASSWORD: process.env.INSTAPAPER_PASSWORD || '',
+    POSTMARK_SERVER_TOKEN: process.env.POSTMARK_SERVER_TOKEN || '',
+    POSTMARK_FROM_EMAIL: process.env.POSTMARK_FROM_EMAIL || '',
+    KINDLE_EMAIL: process.env.KINDLE_EMAIL || '',
+    BULK_SEND_LIMIT: process.env.BULK_SEND_LIMIT || '20',
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-2xl">
-        <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">Instapaper to Kindle</h1>
-        <p className="text-zinc-400 mb-8">Enter your credentials to access your articles.</p>
-        
-        <form action={login} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2" htmlFor="username">
-              Email or Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-              required
-              placeholder="you@example.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2" htmlFor="password">
-              Password <span className="text-zinc-600 text-xs">(if you have one)</span>
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-            />
-          </div>
-          
-          <button
-            type="submit"
-            className="w-full bg-white text-black font-semibold rounded-xl px-4 py-3 hover:bg-zinc-200 transition-colors mt-4"
-          >
-            Sign In
-          </button>
-        </form>
-      </div>
-    </div>
+    <main className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black p-6">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-100/50 via-transparent to-transparent dark:from-blue-900/10 pointer-events-none" />
+      <LoginForm initialValues={initialValues} missingFields={missingFields} />
+    </main>
   );
 }

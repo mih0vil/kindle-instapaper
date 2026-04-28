@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { fetchBookmarks, getBookmarkText, archiveBookmark, InstapaperBookmark, InstapaperItem } from '@/lib/instapaper';
 import { sendEmailToKindle } from '@/lib/postmark';
+import { getConfig } from '@/lib/config';
 
 /**
  * Downgrades heading levels in HTML content (h1 -> h2, h2 -> h3, etc.).
@@ -31,14 +32,15 @@ export async function POST() {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const kindleEmail = process.env.KINDLE_EMAIL;
+    const config = await getConfig();
+    const kindleEmail = config.KINDLE_EMAIL;
     if (!kindleEmail) {
       return NextResponse.json({ error: 'Kindle email not configured' }, { status: 500 });
     }
 
-    const bulkLimit = parseInt(process.env.BULK_SEND_LIMIT || '20', 10);
+    const bulkLimit = config.BULK_SEND_LIMIT;
 
-    // Fetch number of unread bookmarks
+    // Fetch bookmarks
     const data: InstapaperItem[] = await fetchBookmarks(token, secret, 'unread', bulkLimit);
     const bookmarks = data.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
 

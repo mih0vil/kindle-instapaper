@@ -1,11 +1,12 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { fetchBookmarks, InstapaperBookmark, InstapaperUser, InstapaperItem } from '@/lib/instapaper';
-import { logout } from '@/app/actions';
 import Link from 'next/link';
 import { ArchiveButton } from '@/components/ArchiveButton';
 import { ArchiveOldForm } from '@/components/ArchiveOldForm';
 import { SendBulkButton } from '@/components/SendBulkButton';
+import { isConfigComplete } from '@/lib/config';
+import { logout } from '@/app/actions';
 
 /**
  * Home page component.
@@ -23,7 +24,13 @@ export default async function Home({
   const secret = cookieStore.get('instapaper_secret')?.value;
 
   if (!token || !secret) {
-    redirect('/login');
+    const { complete } = await isConfigComplete();
+    if (complete) {
+      // Redirect to the auto-login route handler to set cookies
+      redirect('/api/auto-login');
+    } else {
+      redirect('/login');
+    }
   }
 
   // Await searchParams before using it

@@ -3,67 +3,55 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { instapaperOauth, INSTAPAPER_API_URL, getBookmarkText, archiveBookmark, unarchiveBookmark, fetchBookmarks, InstapaperBookmark } from '@/lib/instapaper';
+import { getBookmarkText, archiveBookmark, unarchiveBookmark, fetchBookmarks, InstapaperBookmark, exchangeXAuthTokens } from '@/lib/instapaper';
 import { sendEmailToKindle } from '@/lib/postmark';
+import { getConfig } from '@/lib/config';
 
 /**
  * Logs in a user by exchanging credentials for an OAuth token.
+ * Stores manually entered configuration fields in secure cookies.
  * 
- * @param formData - Form data containing username and password
+ * @param formData - Form data containing credentials and config
  * @returns Error object if authentication fails, otherwise redirects to home
  */
 export async function login(formData: FormData) {
-  const username = formData.get('username') as string;
-  const password = formData.get('password') as string;
+  const config = await getConfig();
+  const cookieStore = await cookies();
+
+  // Extract all fields from form
+  const fields = [
+    'INSTAPAPER_CONSUMER_KEY',
+    'INSTAPAPER_CONSUMER_SECRET',
+    'INSTAPAPER_USERNAME',
+    'INSTAPAPER_PASSWORD',
+    'POSTMARK_SERVER_TOKEN',
+    'POSTMARK_FROM_EMAIL',
+    'KINDLE_EMAIL',
+    'BULK_SEND_LIMIT'
+  ];
+
+  const manualValues: Record<string, string> = {};
+  
+  for (const field of fields) {
+    const value = formData.get(field) as string;
+    // Only store in cookie if it was entered manually (not provided by .env)
+    if (value && !process.env[field]) {
+      manualValues[field] = value;
+      cookieStore.set(field.toLowerCase(), value, { httpOnly: true, secure: true });
+    }
+  }
+
+  // Use merged values for the actual login
+  const username = (formData.get('INSTAPAPER_USERNAME') as string) || config.INSTAPAPER_USERNAME;
+  const password = (formData.get('INSTAPAPER_PASSWORD') as string) || config.INSTAPAPER_PASSWORD;
 
   if (!username) {
     return { error: 'Username is required' };
   }
 
-  const requestData = {
-    url: `${INSTAPAPER_API_URL}/oauth/access_token`,
-    method: 'POST',
-    data: {
-      x_auth_username: username,
-      x_auth_password: password || '',
-      x_auth_mode: 'client_auth',
-    },
-  };
-
-  const headers = instapaperOauth.toHeader(instapaperOauth.authorize(requestData));
-
-  const body = new URLSearchParams();
-  body.append('x_auth_username', username);
-  if (password) body.append('x_auth_password', password);
-  body.append('x_auth_mode', 'client_auth');
-
   try {
-    const response = await fetch(requestData.url, {
-      method: requestData.method,
-      headers: {
-        ...headers,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: body.toString(),
-    });
+    const { token, secret } = await exchangeXAuthTokens(username, password);
 
-    if (!response.ok) {
-      console.error(response);
-      return { error: `Authentication failed: ${response.statusText}` };
-    }
-
-    const text = await response.text();
-    // response is qline format: oauth_token=...&oauth_token_secret=...
-    const params = new URLSearchParams(text);
-    const token = params.get('oauth_token');
-    const secret = params.get('oauth_token_secret');
-
-    if (!token || !secret) {
-      return { error: 'Invalid response from Instapaper' };
-    }
-
-    // Await the cookies object before using it
-    const cookieStore = await cookies();
     cookieStore.set('instapaper_token', token, { httpOnly: true, secure: true });
     cookieStore.set('instapaper_secret', secret, { httpOnly: true, secure: true });
 
@@ -77,13 +65,30 @@ export async function login(formData: FormData) {
 
 /**
  * Logs out the user by deleting session cookies.
+ * Also deletes manual config cookies to allow a fresh setup.
  * 
  * @returns Redirects to login page
  */
 export async function logout() {
   const cookieStore = await cookies();
-  cookieStore.delete('instapaper_token');
-  cookieStore.delete('instapaper_secret');
+  
+  const cookiesToDelete = [
+    'instapaper_token',
+    'instapaper_secret',
+    'instapaper_consumer_key',
+    'instapaper_consumer_secret',
+    'instapaper_username',
+    'instapaper_password',
+    'postmark_server_token',
+    'postmark_from_email',
+    'kindle_email',
+    'bulk_send_limit'
+  ];
+
+  for (const c of cookiesToDelete) {
+    cookieStore.delete(c);
+  }
+
   redirect('/login');
 }
 
@@ -105,7 +110,8 @@ export async function sendToKindle(bookmarkId: string, title: string) {
 
   try {
     const htmlContent = await getBookmarkText(token, secret, bookmarkId);
-    const kindleEmail = process.env.KINDLE_EMAIL;
+    const config = await getConfig();
+    const kindleEmail = config.KINDLE_EMAIL;
 
     if (!kindleEmail) {
       return { error: 'Kindle email not configured' };
@@ -209,7 +215,6 @@ export async function archiveOldArticles(date: string) {
     }
 
     // Archive them one by one
-    // Note: In a production app with many articles, we might want to handle rate limits or use a queue
     for (const b of oldBookmarks) {
       await archiveBookmark(token, secret, b.bookmark_id.toString());
     }
