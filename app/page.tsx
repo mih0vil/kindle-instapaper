@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { fetchBookmarks } from '@/lib/instapaper';
 import { logout } from '@/app/actions';
+import Link from 'next/link';
 
 export default async function Home({
   searchParams,
@@ -89,11 +90,9 @@ export default async function Home({
         ) : (
           <div className="grid gap-6">
             {bookmarks.map((bookmark) => (
-              <a
+              <Link
                 key={bookmark.bookmark_id}
-                href={bookmark.url}
-                target="_blank"
-                rel="noreferrer"
+                href={`/article/${bookmark.bookmark_id}`}
                 className="group block bg-zinc-900 hover:bg-zinc-800/80 border border-zinc-800 hover:border-zinc-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5"
               >
                 <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-emerald-400 transition-colors line-clamp-2 mb-2">
@@ -117,7 +116,7 @@ export default async function Home({
                     </>
                   )}
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         )}

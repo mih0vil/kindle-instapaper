@@ -18,3 +18,15 @@
 
 * Application should display title "Instapaper to Kindle" in the header
 * Application should display title "Instapaper to Kindle" in the login page
+
+# Viewing an article
+
+* When user clicks on an article, it should navigate to the article page
+* The article page should display:
+    * title
+    * url
+    * description
+    * publication date
+    * article content
+* User should be able to navigate back using an arrow button on the top of the page
+
