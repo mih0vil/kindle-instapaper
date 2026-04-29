@@ -34,7 +34,7 @@
     * publication date
     * article content
 * User should be able to navigate back using an arrow button on the top of the page. When navigating back, app should show previous page user was remembering if it was list of unread or archive articles
-* User should be able to send an article to Kindle using "Send to Kindle" button
+* User should be able to send an article to Kindle using "Send to Kindle" button. Articles are sent in DOCX format for better compatibility and layout preservation on Kindle devices.
 * User should be able to archive an unread article.
     * This action should remove the article from the unread list and add it to the archive list
 * User should be able to unarchive an archived article.
@@ -55,9 +55,9 @@
     * Make environment variable for number of articles to send in bulk. Default value should be 20.
 * This action should be a POST route named /api/send-bulk-to-kindle and should return the date of the newest article
 * The title of the email should be "Instapaper yyyy-mm-dd" where yyyy-mm-dd is the date of newest article
-* All articles should be combined into one email and sent as a single HTML file. 
+* All articles should be combined into one email and sent as a single DOCX file. 
 * Each article should be represented with:
     * Title in <h1> tag
     * Article content below title. The content should be transformed in a way that all <h1..6> tags are converted to <h2..6> tags, e.g. <h2> becomes <h3>, etc.
-* Articles in the email should be separated with a horizontal line.
+* Articles in the DOCX file should be separated appropriately.
 * All of this articles which are sent to Kindle should be archived. In the implementation, archive the articles after the email is sucessfully sent to Kindle.

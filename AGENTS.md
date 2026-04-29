@@ -21,6 +21,8 @@ This is a web app that sends Instapaper articles to Kindle and manages Instapape
 - postmark for sending emails
 - instapaper API for fetching and managing articles
 
+Development environment is run on Windows.
+
 ## Specification
 
 @specification.md
