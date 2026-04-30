@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { fetchBookmarks, getBookmarkText, archiveBookmark, InstapaperBookmark, InstapaperItem } from '@/lib/instapaper';
+import { fetchBookmarks, getBookmarkText, archiveBookmark, exchangeXAuthTokens, InstapaperBookmark, InstapaperItem } from '@/lib/instapaper';
 import { sendEmailToKindle } from '@/lib/postmark';
 import { getConfig } from '@/lib/config';
 
@@ -25,14 +25,26 @@ function transformHeadings(html: string): string {
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    const token = cookieStore.get('instapaper_token')?.value;
-    const secret = cookieStore.get('instapaper_secret')?.value;
+    const config = await getConfig();
+    let token = cookieStore.get('instapaper_token')?.value;
+    let secret = cookieStore.get('instapaper_secret')?.value;
 
+    // If no cookies, try to auto-login using .env credentials (useful for Cron jobs)
     if (!token || !secret) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      if (config.INSTAPAPER_USERNAME && config.INSTAPAPER_PASSWORD) {
+        try {
+          const tokens = await exchangeXAuthTokens(config.INSTAPAPER_USERNAME, config.INSTAPAPER_PASSWORD);
+          token = tokens.token;
+          secret = tokens.secret;
+        } catch (authError) {
+          console.error('Cron auto-login failed:', authError);
+          return NextResponse.json({ error: 'Authentication failed (Cron)' }, { status: 401 });
+        }
+      } else {
+        return NextResponse.json({ error: 'Not authenticated and no .env credentials' }, { status: 401 });
+      }
     }
 
-    const config = await getConfig();
     const kindleEmail = config.KINDLE_EMAIL;
     if (!kindleEmail) {
       return NextResponse.json({ error: 'Kindle email not configured' }, { status: 500 });

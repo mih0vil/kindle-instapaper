@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/send-bulk-to-kindle",
+      "schedule": "0 18 * * *"
+    }
+  ]
+}
