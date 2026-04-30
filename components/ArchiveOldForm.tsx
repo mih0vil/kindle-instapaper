@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { getOldBookmarks, refreshArticles } from '@/app/actions';
 
 /**
@@ -21,7 +21,7 @@ export function ArchiveOldForm() {
   const [current, setCurrent] = useState(0);
   const [currentTitle, setCurrentTitle] = useState('');
 
-  const handleArchive = async (e: React.FormEvent) => {
+  const handleArchive = async (e: FormEvent) => {
     e.preventDefault();
     if (!date) return;
 

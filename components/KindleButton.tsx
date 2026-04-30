@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { MouseEvent, useState } from 'react';
 import { sendToKindle } from '@/app/actions';
 
 /**
@@ -14,7 +14,7 @@ export function KindleButton({ bookmarkId, title, compact = false }: { bookmarkI
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSend = async (e?: React.MouseEvent) => {
+  const handleSend = async (e?: MouseEvent) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { MouseEvent, useState } from 'react';
 import { archiveAction, unarchiveAction } from '@/app/actions';
 
 /**
@@ -18,7 +18,7 @@ export function ArchiveButton({
 }) {
   const [loading, setLoading] = useState(false);
 
-  const handleAction = async (e: React.MouseEvent) => {
+  const handleAction = async (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
