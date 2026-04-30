@@ -9,10 +9,12 @@ Previously, Instapaper had a feature to send these articles to Kindle, but recen
 
 ## Vibe coding
 
-This was also an opportunity to try vibe coding for the first time using Google Antigravity. I am using free version of Google LLM models.
-In my experience, Gemini 3.1 pro was not working because of overload on free tier. I switched to lighter Gemini Flash models and it happened to work better.
+This was also an opportunity to try AI assisted coding for the first time using Google Antigravity. I am using free version of Google LLM models.
+In my experience, Gemini 3.1 pro was not working because of overload on free tier and it was a bit slow. I switched to lighter Gemini Flash models and it happened to work better.
 LLM was not working all the time as it was also overloaded, but I would click retry and it would eventually work.
-My prompts were not so apstract as I have experience in programming and I was afraid that ligther LLM model would not work so good but in general, as it is a free version, I am satisified and I managed to create what I wanted.
+My prompts were not so apstract as I have experience in programming and I was afraid that ligther LLM model would not work so good but in general, as it is a free version, I am satisified and I managed to create what I wanted. 
+
+A bit of an issue happened when I decided to convert from HTML to DOCX to improve compatibility with Kindle. I asked agent to search for the library and implement it. It did not work and then I instructed it to use Turbodocx and sharp library which gave it a push in good direction.
 
 ## Features
 
@@ -44,6 +46,7 @@ Open [http://localhost:3235](http://localhost:3235) with your browser to see the
 
 ## API keys
 
+You should register to Instapaper and I would suggest you to install the app on the mobile phone and in the browser to easily add articles to Instapaper. 
 You need to get an API key from [Instapaper](https://www.instapaper.com/developers/applications)
 You also need API key for Postmark to send emails. You can get it from [Postmark](https://postmarkapp.com/) and for this you need to have email address on your own domain, not on gmail or other free email providers.
 As for Kindle, your need to know email address of your Kindle device and allow sending email from Postmark to your Kindle email address.
