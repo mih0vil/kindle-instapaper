@@ -1,4 +1,6 @@
 TODO tasks
 
-* table of contents for bulk articles
-* send to kindle button on each article in list
+* [x] table of contents for bulk articles
+* [x] send to kindle button on each article in list
+* [ ] deploy to Vercel
+* [ ] schedule for sending bulk articles automatically every day

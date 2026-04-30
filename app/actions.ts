@@ -109,7 +109,8 @@ export async function sendToKindle(bookmarkId: string, title: string) {
   }
 
   try {
-    const htmlContent = await getBookmarkText(token, secret, bookmarkId);
+    const rawContent = await getBookmarkText(token, secret, bookmarkId);
+    const htmlContent = `<h1>${title}</h1>${rawContent}`;
     const config = await getConfig();
     const kindleEmail = config.KINDLE_EMAIL;
 

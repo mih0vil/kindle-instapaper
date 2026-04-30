@@ -56,13 +56,21 @@ export async function POST() {
     // Fetch and transform content for all articles
     let combinedHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${subject}</title></head><body>`;
 
+    // Add Table of Contents
+    combinedHtml += `<h1>Table of Contents</h1><ul>`;
+    for (let i = 0; i < bookmarks.length; i++) {
+      const bookmark = bookmarks[i];
+      combinedHtml += `<li><a href="#article-${bookmark.bookmark_id}">${bookmark.title}</a></li>`;
+    }
+    combinedHtml += `</ul><hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;" />`;
+
     for (let i = 0; i < bookmarks.length; i++) {
       const bookmark = bookmarks[i];
       try {
         const rawContent = await getBookmarkText(token, secret, bookmark.bookmark_id.toString());
         const transformedContent = transformHeadings(rawContent);
 
-        combinedHtml += `<article>`;
+        combinedHtml += `<article id="article-${bookmark.bookmark_id}">`;
         combinedHtml += `<h1>${bookmark.title}</h1>`;
         combinedHtml += transformedContent;
         combinedHtml += `</article>`;
@@ -72,7 +80,7 @@ export async function POST() {
         }
       } catch (err) {
         console.error(`Failed to fetch content for bookmark ${bookmark.bookmark_id}:`, err);
-        combinedHtml += `<article><h1>${bookmark.title}</h1><p>Error fetching content for this article.</p></article>`;
+        combinedHtml += `<article id="article-${bookmark.bookmark_id}"><h1>${bookmark.title}</h1><p>Error fetching content for this article.</p></article>`;
       }
     }
 

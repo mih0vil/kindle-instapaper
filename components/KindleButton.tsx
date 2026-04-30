@@ -10,11 +10,15 @@ import { sendToKindle } from '@/app/actions';
  * @param bookmarkId - The ID of the bookmark to send
  * @param title - The title of the article
  */
-export function KindleButton({ bookmarkId, title }: { bookmarkId: string, title: string }) {
+export function KindleButton({ bookmarkId, title, compact = false }: { bookmarkId: string, title: string, compact?: boolean }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSend = async () => {
+  const handleSend = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setStatus('loading');
     setError(null);
     
@@ -22,7 +26,7 @@ export function KindleButton({ bookmarkId, title }: { bookmarkId: string, title:
       const result = await sendToKindle(bookmarkId, title);
       if ('error' in result) {
         setStatus('error');
-        setError(result.error);
+        setError(result.error || 'Failed to send');
       } else {
         setStatus('success');
         setTimeout(() => setStatus('idle'), 3000);
@@ -39,7 +43,9 @@ export function KindleButton({ bookmarkId, title }: { bookmarkId: string, title:
       <button
         onClick={handleSend}
         disabled={status === 'loading'}
-        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-lg active:scale-95 ${
+        className={`flex items-center gap-2 transition-all shadow-lg active:scale-95 ${
+          compact ? 'px-4 py-2 rounded-lg text-sm font-medium' : 'px-6 py-3 rounded-xl font-semibold'
+        } ${
           status === 'loading'
             ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
             : status === 'success'
@@ -69,8 +75,8 @@ export function KindleButton({ bookmarkId, title }: { bookmarkId: string, title:
           </>
         ) : (
           <>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            Send to Kindle
+            <svg xmlns="http://www.w3.org/2000/svg" width={compact ? "16" : "20"} height={compact ? "16" : "20"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            {compact ? 'Send' : 'Send to Kindle'}
           </>
         )}
       </button>

@@ -20,6 +20,7 @@ This is a web app that sends Instapaper articles to Kindle and manages Instapape
 - Tailwind CSS
 - postmark for sending emails
 - instapaper API for fetching and managing articles
+- @turbodocx/html-to-docx for converting HTML to DOCX
 
 Development environment is run on Windows.
 

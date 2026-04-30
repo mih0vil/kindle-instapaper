@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { fetchBookmarks, InstapaperBookmark, InstapaperUser, InstapaperItem } from '@/lib/instapaper';
 import Link from 'next/link';
 import { ArchiveButton } from '@/components/ArchiveButton';
+import { KindleButton } from '@/components/KindleButton';
 import { ArchiveOldForm } from '@/components/ArchiveOldForm';
 import { SendBulkButton } from '@/components/SendBulkButton';
 import { isConfigComplete } from '@/lib/config';
@@ -140,7 +141,8 @@ export default async function Home({
                     )}
                   </div>
                 </Link>
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                  <KindleButton bookmarkId={bookmark.bookmark_id.toString()} title={bookmark.title} compact={true} />
                   <ArchiveButton bookmarkId={bookmark.bookmark_id.toString()} isArchived={filter === 'archive'} />
                 </div>
               </div>

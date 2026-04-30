@@ -19,6 +19,8 @@ export async function sendEmailToKindle(to: string, originalTitle: string, htmlC
     // Convert HTML to DOCX
     // Using empty strings for header/footer instead of null for better compatibility
     const docxBuffer = await HTMLtoDOCX(htmlContent, '', {
+      title: originalTitle,
+      creator: 'Instapaper to Kindle',
       orientation: 'portrait',
       margins: { top: 720 },
     }, '');

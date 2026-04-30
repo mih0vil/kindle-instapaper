@@ -56,6 +56,7 @@
 * This action should be a POST route named /api/send-bulk-to-kindle and should return the date of the newest article
 * The title of the email should be "Instapaper yyyy-mm-dd" where yyyy-mm-dd is the date of newest article
 * All articles should be combined into one email and sent as a single DOCX file. 
+    * At the begining of the document, there should be table of contents with links to each article. So that user can easily navigate to the article they want to read. Links should point to the corresponding article in the document.
 * Each article should be represented with:
     * Title in <h1> tag
     * Article content below title. The content should be transformed in a way that all <h1..6> tags are converted to <h2..6> tags, e.g. <h2> becomes <h3>, etc.
