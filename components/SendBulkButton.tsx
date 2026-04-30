@@ -17,7 +17,7 @@ export function SendBulkButton() {
 
     try {
       const response = await fetch('/api/send-bulk-to-kindle', {
-        method: 'POST',
+        method: 'GET',
       });
 
       const data = await response.json();

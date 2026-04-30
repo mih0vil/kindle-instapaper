@@ -22,7 +22,7 @@ function transformHeadings(html: string): string {
  * API route to send a bulk of unread articles to Kindle.
  * Sends the 20 most recent unread articles combined into a single HTML file.
  */
-export async function POST() {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const config = await getConfig();
