@@ -40,11 +40,11 @@ npm install
 npm run dev
 ```
 
-## Usage
+### Usage
 
 Open [http://localhost:3235](http://localhost:3235) with your browser to see the result.
 
-## API keys
+### API keys
 
 You should register to Instapaper and I would suggest you to install the app on the mobile phone and in the browser to easily add articles to Instapaper. 
 You need to get an API key from [Instapaper](https://www.instapaper.com/developers/applications)
