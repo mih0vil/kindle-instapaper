@@ -23,6 +23,7 @@ export async function sendEmailToKindle(to: string, originalTitle: string, htmlC
       creator: 'Instapaper to Kindle',
       orientation: 'portrait',
       margins: { top: 720 },
+      heading: { heading1: { outlineLevel: 1 } },
     }, '');
 
     const filename = originalTitle
