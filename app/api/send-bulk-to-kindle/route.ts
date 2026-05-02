@@ -73,6 +73,42 @@ async function fetchBookmarkContents(
 }
 
 /**
+ * Archives multiple bookmarks using a sliding-window concurrency pool.
+ *
+ * A new archive request begins the moment any in-flight one completes,
+ * keeping exactly `concurrency` requests active at all times.
+ * Errors for individual bookmarks are logged but do not stop the rest.
+ *
+ * @param token - Instapaper OAuth token
+ * @param secret - Instapaper OAuth secret
+ * @param bookmarks - List of bookmarks to archive
+ * @param concurrency - Maximum number of simultaneous archive requests
+ */
+async function archiveBookmarks(
+  token: string,
+  secret: string,
+  bookmarks: InstapaperBookmark[],
+  concurrency: number
+): Promise<void> {
+  let nextIndex = 0;
+
+  async function worker(): Promise<void> {
+    while (nextIndex < bookmarks.length) {
+      const index = nextIndex++;
+      const bookmark = bookmarks[index];
+      try {
+        await archiveBookmark(token, secret, bookmark.bookmark_id.toString());
+      } catch (err) {
+        console.error(`Failed to archive bookmark ${bookmark.bookmark_id} after bulk send:`, err);
+      }
+    }
+  }
+
+  const workerCount = Math.min(concurrency, bookmarks.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+}
+
+/**
  * API route to send a bulk of unread articles to Kindle.
  * Sends the N most recent unread articles combined into a single DOCX file.
  * N is controlled by the BULK_SEND_LIMIT environment variable (default: 20).
@@ -155,13 +191,7 @@ export async function GET() {
     await sendEmailToKindle(kindleEmail, subject, combinedHtml);
 
     // 2. Archive the bookmarks ONLY after successful send
-    for (const bookmark of bookmarks) {
-      try {
-        await archiveBookmark(token, secret, bookmark.bookmark_id.toString());
-      } catch (err) {
-        console.error(`Failed to archive bookmark ${bookmark.bookmark_id} after bulk send:`, err);
-      }
-    }
+    await archiveBookmarks(token, secret, bookmarks, parallelLimit);
 
     // Revalidate the home page to reflect archived status
     revalidatePath('/');
