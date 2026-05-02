@@ -9,6 +9,7 @@ export interface AppConfig {
   POSTMARK_FROM_EMAIL: string;
   KINDLE_EMAIL: string;
   BULK_SEND_LIMIT: number;
+  FETCH_PARALLEL_LIMIT: number;
 }
 
 /**
@@ -35,6 +36,7 @@ export async function getConfig(): Promise<AppConfig> {
     POSTMARK_FROM_EMAIL: getValue('POSTMARK_FROM_EMAIL'),
     KINDLE_EMAIL: getValue('KINDLE_EMAIL'),
     BULK_SEND_LIMIT: parseInt(getValue('BULK_SEND_LIMIT', '20'), 10),
+    FETCH_PARALLEL_LIMIT: parseInt(getValue('FETCH_PARALLEL_LIMIT', '5'), 10),
   };
 }
 

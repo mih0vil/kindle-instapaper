@@ -7,20 +7,75 @@ import { getConfig } from '@/lib/config';
 
 /**
  * Downgrades heading levels in HTML content (h1 -> h2, h2 -> h3, etc.).
- * 
+ *
  * @param html - Original HTML content
  * @returns Transformed HTML
  */
 function transformHeadings(html: string): string {
-  return html.replace(/<(\/?)h([1-6])/gi, (match, slash, level) => {
-    const newLevel = Math.min(parseInt(level) + 1, 6);
+  return html.replace(/<(\/?)(h[1-6])/gi, (_match, slash, tag) => {
+    const level = parseInt(tag[1]);
+    const newLevel = Math.min(level + 1, 6);
     return `<${slash}h${newLevel}`;
   });
 }
 
 /**
+ * Fetches bookmark text for multiple articles using a sliding-window concurrency pool.
+ *
+ * Instead of waiting for a whole batch to finish before starting the next one,
+ * a new fetch begins the moment any in-flight request completes — keeping exactly
+ * `concurrency` requests active at all times (or fewer when work runs out).
+ *
+ * @param token - Instapaper OAuth token
+ * @param secret - Instapaper OAuth secret
+ * @param bookmarks - Ordered list of bookmarks whose content should be fetched
+ * @param concurrency - Maximum number of simultaneous fetch requests
+ * @returns Array of transformed HTML strings in the same order as the input bookmarks;
+ *          empty string for any article that failed to fetch
+ */
+async function fetchBookmarkContents(
+  token: string,
+  secret: string,
+  bookmarks: InstapaperBookmark[],
+  concurrency: number
+): Promise<string[]> {
+  const results: string[] = new Array(bookmarks.length).fill('');
+
+  // nextIndex tracks the next bookmark that hasn't been dispatched yet.
+  // JavaScript is single-threaded so incrementing it inside an async function
+  // is safe — no two workers can read the same value simultaneously.
+  let nextIndex = 0;
+
+  /**
+   * A single worker: keeps picking the next undispatched bookmark, fetches its
+   * content, stores the result, then loops — until no work remains.
+   */
+  async function worker(): Promise<void> {
+    while (nextIndex < bookmarks.length) {
+      const index = nextIndex++;
+      const bookmark = bookmarks[index];
+      try {
+        const rawContent = await getBookmarkText(token, secret, bookmark.bookmark_id.toString());
+        results[index] = transformHeadings(rawContent);
+      } catch (err) {
+        console.error(`Failed to fetch content for bookmark ${bookmark.bookmark_id}:`, err);
+        results[index] = `Failed to fetch content for bookmark "${bookmark?.title}"`;
+      }
+    }
+  }
+
+  // Spawn `concurrency` workers (capped at the number of articles).
+  // Each worker immediately picks up the next job as soon as it finishes the current one.
+  const workerCount = Math.min(concurrency, bookmarks.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+
+  return results;
+}
+
+/**
  * API route to send a bulk of unread articles to Kindle.
- * Sends the 20 most recent unread articles combined into a single HTML file.
+ * Sends the N most recent unread articles combined into a single DOCX file.
+ * N is controlled by the BULK_SEND_LIMIT environment variable (default: 20).
  */
 export async function GET() {
   try {
@@ -51,8 +106,9 @@ export async function GET() {
     }
 
     const bulkLimit = config.BULK_SEND_LIMIT;
+    const parallelLimit = config.FETCH_PARALLEL_LIMIT;
 
-    // Fetch bookmarks
+    // Fetch bookmarks list
     const data: InstapaperItem[] = await fetchBookmarks(token, secret, 'unread', bulkLimit);
     const bookmarks = data.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
 
@@ -65,34 +121,31 @@ export async function GET() {
     const newestDate = new Date(newestArticle.time * 1000).toISOString().split('T')[0];
     const subject = `Instapaper ${newestDate}`;
 
-    // Fetch and transform content for all articles
+    // Fetch all article contents via a concurrency pool (parallelLimit simultaneous requests)
+    const articleContents = await fetchBookmarkContents(token, secret, bookmarks, parallelLimit);
+
+    // Build combined HTML document
     let combinedHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${subject}</title></head><body>`;
 
     // Add Table of Contents
     combinedHtml += `<h1>Table of Contents</h1><ul>`;
-    for (let i = 0; i < bookmarks.length; i++) {
-      const bookmark = bookmarks[i];
+    for (const bookmark of bookmarks) {
       combinedHtml += `<li><a href="#article-${bookmark.bookmark_id}">${bookmark.title}</a></li>`;
     }
     combinedHtml += `</ul><hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;" />`;
 
+    // Add each article
     for (let i = 0; i < bookmarks.length; i++) {
       const bookmark = bookmarks[i];
-      try {
-        const rawContent = await getBookmarkText(token, secret, bookmark.bookmark_id.toString());
-        const transformedContent = transformHeadings(rawContent);
+      const content = articleContents[i];
 
-        combinedHtml += `<article id="article-${bookmark.bookmark_id}">`;
-        combinedHtml += `<h1>${bookmark.title}</h1>`;
-        combinedHtml += transformedContent;
-        combinedHtml += `</article>`;
+      combinedHtml += `<article id="article-${bookmark.bookmark_id}">`;
+      combinedHtml += `<h1>${bookmark.title}</h1>`;
+      combinedHtml += content || `<p>Error fetching content for this article.</p>`;
+      combinedHtml += `</article>`;
 
-        if (i < bookmarks.length - 1) {
-          combinedHtml += `<hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;" />`;
-        }
-      } catch (err) {
-        console.error(`Failed to fetch content for bookmark ${bookmark.bookmark_id}:`, err);
-        combinedHtml += `<article id="article-${bookmark.bookmark_id}"><h1>${bookmark.title}</h1><p>Error fetching content for this article.</p></article>`;
+      if (i < bookmarks.length - 1) {
+        combinedHtml += `<hr style="margin: 40px 0; border: 0; border-top: 1px solid #eee;" />`;
       }
     }
 
