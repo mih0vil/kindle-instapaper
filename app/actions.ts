@@ -5,6 +5,8 @@ import { getBookmarkText, archiveBookmark, unarchiveBookmark, fetchBookmarks, In
 import { sendEmailToKindle } from '@/lib/postmark';
 import { getConfig } from '@/lib/config';
 
+import { processArticleAndCalculateSize } from '@/lib/article-size';
+
 /**
  * Sends a specific article to Kindle via email.
  * 
@@ -15,7 +17,8 @@ import { getConfig } from '@/lib/config';
 export async function sendToKindle(bookmarkId: string, title: string) {
   try {
     const rawContent = await getBookmarkText(bookmarkId);
-    const htmlContent = `<h1>${title}</h1>${rawContent}`;
+    const { sanitizedHtml } = await processArticleAndCalculateSize(rawContent);
+    const htmlContent = `<h1>${title}</h1>${sanitizedHtml}`;
     
     const config = getConfig();
     const kindleEmail = config.KINDLE_EMAIL;

@@ -32,6 +32,11 @@ export async function sendEmailToKindle(to: string, originalTitle: string, htmlC
       .replace(/[^a-z0-9]/gi, '_')
       .toLowerCase() + '.docx';
 
+    const buffer = Buffer.from(docxBuffer as Buffer);
+    if (buffer.length > 10 * 1024 * 1024) {
+      throw new Error(`DOCX attachment size (${(buffer.length / (1024 * 1024)).toFixed(2)} MB) exceeds Postmark limit of 10 MB.`);
+    }
+
     return await postmarkClient.sendEmail({
       From: process.env.POSTMARK_FROM_EMAIL || '',
       To: to,
@@ -41,7 +46,7 @@ export async function sendEmailToKindle(to: string, originalTitle: string, htmlC
       Attachments: [
         {
           Name: filename,
-          Content: Buffer.from(docxBuffer as Buffer).toString('base64'),
+          Content: buffer.toString('base64'),
           ContentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           ContentID: null,
         },

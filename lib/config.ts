@@ -1,4 +1,11 @@
 
+/**
+ * Maximum threshold in bytes for total bulk email size.
+ * Postmark enforces a strict 10,485,760 bytes (10 MB) attachment limit.
+ * Setting this threshold to 8.5 MB provides a safe buffer for DOCX structure overhead.
+ */
+export const MAX_BULK_ATTACHMENT_BYTES = 8.5 * 1024 * 1024;
+
 export interface AppConfig {
   INSTAPAPER_CONSUMER_KEY: string;
   INSTAPAPER_CONSUMER_SECRET: string;
@@ -11,6 +18,7 @@ export interface AppConfig {
   KINDLE_EMAIL: string;
   BULK_SEND_LIMIT: number;
   FETCH_PARALLEL_LIMIT: number;
+  MAX_BULK_ATTACHMENT_BYTES: number;
 }
 
 /**
@@ -25,6 +33,8 @@ export function getConfig(): AppConfig {
     return process.env[key] || defaultValue;
   };
 
+  const defaultMaxBytes = Math.floor(8.5 * 1024 * 1024); // ~8.5 MB safety buffer for 10 MB limit
+
   return {
     INSTAPAPER_CONSUMER_KEY: getValue('INSTAPAPER_CONSUMER_KEY'),
     INSTAPAPER_CONSUMER_SECRET: getValue('INSTAPAPER_CONSUMER_SECRET'),
@@ -37,6 +47,7 @@ export function getConfig(): AppConfig {
     KINDLE_EMAIL: getValue('KINDLE_EMAIL'),
     BULK_SEND_LIMIT: parseInt(getValue('BULK_SEND_LIMIT', '20'), 10),
     FETCH_PARALLEL_LIMIT: parseInt(getValue('FETCH_PARALLEL_LIMIT', '5'), 10),
+    MAX_BULK_ATTACHMENT_BYTES: parseInt(getValue('MAX_BULK_ATTACHMENT_BYTES', defaultMaxBytes.toString()), 10),
   };
 }
 

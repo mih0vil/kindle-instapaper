@@ -21,6 +21,7 @@
     * `INSTAPAPER_TOKEN` & `INSTAPAPER_SECRET` (User OAuth tokens, skips xAuth exchange if provided)
     * `BULK_SEND_LIMIT` (default: 20)
     * `FETCH_PARALLEL_LIMIT` (default: 5)
+    * `MAX_BULK_ATTACHMENT_BYTES` (default: 8912896, 8.5 MB)
 * Authentication is handled automatically:
     * The application exchanges credentials for OAuth tokens via xAuth on the first request.
     * Tokens are cached in memory only.
@@ -65,8 +66,11 @@
 * All articles should be combined into one email and sent as a single DOCX file. 
     * At the begining of the document, there should be table of contents with links to each article. So that user can easily navigate to the article they want to read. Links should point to the corresponding article in the document.
     * When fetching the articles, fetch them in parallel, not sequentially. You should fetch N articles in parallel where N should be defined as an environment variable. Default value should be 5.
+* When processing articles, application must calculate the size of the articles and images.
+    * Email attachments are limited to 10 MB by Postmark.
+    * If the cumulative size of articles and images in the bulk exceeds the maximum safe attachment limit, the application must send a smaller bulk of articles that fit within the size limit.
 * Each article should be represented with:
     * Title in <h1> tag
     * Article content below title. The content should be transformed in a way that all <h1..6> tags are converted to <h2..6> tags, e.g. <h2> becomes <h3>, etc.
 * Articles in the DOCX file should be separated appropriately.
-* All of this articles which are sent to Kindle should be archived. In the implementation, archive the articles after the email is sucessfully sent to Kindle.
+* All of the articles which are actually sent to Kindle should be archived. In the implementation, archive the articles after the email is successfully sent to Kindle.
