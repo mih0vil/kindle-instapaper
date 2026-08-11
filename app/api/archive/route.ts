@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { archiveBookmark } from '@/lib/instapaper';
 
@@ -9,15 +8,7 @@ import { archiveBookmark } from '@/lib/instapaper';
 export async function POST(request: Request) {
   try {
     const { bookmarkId } = await request.json();
-    const cookieStore = await cookies();
-    const token = cookieStore.get('instapaper_token')?.value;
-    const secret = cookieStore.get('instapaper_secret')?.value;
-
-    if (!token || !secret) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
-
-    await archiveBookmark(token, secret, bookmarkId);
+    await archiveBookmark(bookmarkId);
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error('API Archive error:', error);

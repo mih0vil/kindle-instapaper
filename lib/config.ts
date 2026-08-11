@@ -1,8 +1,9 @@
-import { cookies } from 'next/headers';
 
 export interface AppConfig {
   INSTAPAPER_CONSUMER_KEY: string;
   INSTAPAPER_CONSUMER_SECRET: string;
+  INSTAPAPER_TOKEN: string;
+  INSTAPAPER_SECRET: string;
   INSTAPAPER_USERNAME?: string;
   INSTAPAPER_PASSWORD?: string;
   POSTMARK_SERVER_TOKEN: string;
@@ -14,22 +15,21 @@ export interface AppConfig {
 
 /**
  * Retrieves the application configuration.
- * Merges values from .env file and secure cookies.
- * Priority: .env > Cookies.
+ * Reads values exclusively from .env file.
  * 
- * @returns The merged application configuration
+ * @returns The application configuration
  */
-export async function getConfig(): Promise<AppConfig> {
-  const cookieStore = await cookies();
-  
-  // Helper to get value from env or cookie
+export function getConfig(): AppConfig {
+  // Helper to get value from env
   const getValue = (key: string, defaultValue: string = ''): string => {
-    return process.env[key] || cookieStore.get(key.toLowerCase())?.value || defaultValue;
+    return process.env[key] || defaultValue;
   };
 
   return {
     INSTAPAPER_CONSUMER_KEY: getValue('INSTAPAPER_CONSUMER_KEY'),
     INSTAPAPER_CONSUMER_SECRET: getValue('INSTAPAPER_CONSUMER_SECRET'),
+    INSTAPAPER_TOKEN: getValue('INSTAPAPER_TOKEN'),
+    INSTAPAPER_SECRET: getValue('INSTAPAPER_SECRET'),
     INSTAPAPER_USERNAME: getValue('INSTAPAPER_USERNAME') || undefined,
     INSTAPAPER_PASSWORD: getValue('INSTAPAPER_PASSWORD') || undefined,
     POSTMARK_SERVER_TOKEN: getValue('POSTMARK_SERVER_TOKEN'),
@@ -44,7 +44,7 @@ export async function getConfig(): Promise<AppConfig> {
  * Checks if all required fields are present in the configuration.
  * Returns both the completion status and the list of missing fields.
  */
-export async function isConfigComplete(): Promise<{ complete: boolean; missingFields: string[] }> {
+export function isConfigComplete(): { complete: boolean; missingFields: string[] } {
   const fields = [
     'INSTAPAPER_CONSUMER_KEY',
     'INSTAPAPER_CONSUMER_SECRET',

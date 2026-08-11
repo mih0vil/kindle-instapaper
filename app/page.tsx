@@ -1,13 +1,9 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { fetchBookmarks, InstapaperBookmark, InstapaperUser, InstapaperItem } from '@/lib/instapaper';
 import Link from 'next/link';
 import { ArchiveButton } from '@/components/ArchiveButton';
 import { KindleButton } from '@/components/KindleButton';
 import { ArchiveOldForm } from '@/components/ArchiveOldForm';
 import { SendBulkButton } from '@/components/SendBulkButton';
-import { isConfigComplete } from '@/lib/config';
-import { logout } from '@/app/actions';
 
 /**
  * Home page component.
@@ -20,20 +16,6 @@ export default async function Home({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
-  const cookieStore = await cookies();
-  const token = cookieStore.get('instapaper_token')?.value;
-  const secret = cookieStore.get('instapaper_secret')?.value;
-
-  if (!token || !secret) {
-    const { complete } = await isConfigComplete();
-    if (complete) {
-      // Redirect to the auto-login route handler to set cookies
-      redirect('/api/auto-login');
-    } else {
-      redirect('/login');
-    }
-  }
-
   // Await searchParams before using it
   const sp = await searchParams;
   const filter = sp.filter === 'archive' ? 'archive' : 'unread';
@@ -43,28 +25,37 @@ export default async function Home({
   let error: string | null = null;
 
   try {
-    const data: InstapaperItem[] = await fetchBookmarks(token, secret, filter, 100);
+    const data: InstapaperItem[] = await fetchBookmarks(filter, 100);
     // Data is an array of objects mixed with type="user" and type="bookmark"
     user = data.find((item): item is InstapaperUser => item.type === 'user') || null;
     bookmarks = data.filter((item): item is InstapaperBookmark => item.type === 'bookmark');
   } catch (err: unknown) {
     error = err instanceof Error ? err.message : 'An unexpected error occurred';
+    
+    // If it's a configuration error, we show a friendly message
+    if (error.includes('not configured')) {
+      return (
+        <div className="min-h-screen bg-zinc-950 text-white font-sans flex items-center justify-center p-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md w-full text-center">
+            <h1 className="text-2xl font-bold mb-4">Setup Required</h1>
+            <p className="text-zinc-400 mb-6">
+              Please configure your Instapaper credentials in the <code>.env</code> file to use this application.
+            </p>
+          </div>
+        </div>
+      );
+    }
   }
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
       <header className="sticky top-0 z-10 bg-zinc-950/80 backdrop-blur-xl border-b border-white/10 px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-semibold tracking-tight">Instapaper to Kindle</h1>
-        <div className="flex items-center gap-6">
+        {user && (
           <span className="text-zinc-400 text-sm hidden sm:inline-block">
-            {user ? user.username : 'Logged in'}
+            {user.username}
           </span>
-          <form action={logout}>
-            <button type="submit" className="text-sm font-medium text-emerald-500 hover:text-emerald-400 transition-colors">
-              Sign out
-            </button>
-          </form>
-        </div>
+        )}
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-12">

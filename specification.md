@@ -9,20 +9,27 @@
     * Secrets for Instapaper API should be stored in .env file
     * .env file should not be commited to version control
 
-# Log in user
+# Authentication & Configuration
 
-* Username and password should be stored in .env file
-* In case username and password are not provided in .env file, application should display login page with all fields from .env file present so that user can enter them manually. 
-    * Fields which are entered in .env files, should have values already filled
-    * Values which are entered manually, should be stored in a cookie after successful login. Only manually entered values should be stored, not values from .env file
-* If all values are present in .env file, user should be automatically logged in and login form should be skipped
-* implementation: construct a function or constant which retrieves these values from .env file or cookies and makes them available to the application. Use this across the whole application.
-* cookie is used to make it available for server components
+* All configuration is provided via environment variables in a `.env` file.
+* Required variables:
+    * `INSTAPAPER_CONSUMER_KEY` & `INSTAPAPER_CONSUMER_SECRET` (from Instapaper API)
+    * `INSTAPAPER_USERNAME` & `INSTAPAPER_PASSWORD` (User credentials)
+    * `POSTMARK_SERVER_TOKEN` & `POSTMARK_FROM_EMAIL` (for sending emails)
+    * `KINDLE_EMAIL` (destination Kindle address)
+* Optional variables:
+    * `INSTAPAPER_TOKEN` & `INSTAPAPER_SECRET` (User OAuth tokens, skips xAuth exchange if provided)
+    * `BULK_SEND_LIMIT` (default: 20)
+    * `FETCH_PARALLEL_LIMIT` (default: 5)
+* Authentication is handled automatically:
+    * The application exchanges credentials for OAuth tokens via xAuth on the first request.
+    * Tokens are cached in memory only.
+    * If tokens become invalid (returning a 401 error), the application automatically clears the cache and performs a new xAuth exchange once.
+* There is no login page; if configuration is missing, the application displays a setup required message.
 
 # Title of the application should be "Instapaper to Kindle"
 
 * Application should display title "Instapaper to Kindle" in the header
-* Application should display title "Instapaper to Kindle" in the login page
 
 # Viewing an article
 

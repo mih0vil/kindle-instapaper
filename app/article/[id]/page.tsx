@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { fetchBookmarks, getBookmarkText, InstapaperBookmark, InstapaperItem } from '@/lib/instapaper';
 import Link from 'next/link';
 import { KindleButton } from '@/components/KindleButton';
@@ -23,14 +21,6 @@ export default async function ArticlePage({
   const sp = await searchParams;
   const from = sp.from === 'archive' ? 'archive' : 'unread';
   
-  const cookieStore = await cookies();
-  const token = cookieStore.get('instapaper_token')?.value;
-  const secret = cookieStore.get('instapaper_secret')?.value;
-
-  if (!token || !secret) {
-    redirect('/login');
-  }
-
   let bookmark: InstapaperBookmark | null = null;
   let content: string = '';
   let error: string | null = null;
@@ -39,8 +29,8 @@ export default async function ArticlePage({
   try {
     // We fetch unread and archive to find the bookmark
     const [unreadData, archiveData] = await Promise.all([
-      fetchBookmarks(token, secret, 'unread', 500),
-      fetchBookmarks(token, secret, 'archive', 500),
+      fetchBookmarks('unread', 500),
+      fetchBookmarks('archive', 500),
     ]);
 
     const archiveBookmarks = archiveData.filter((item: InstapaperItem): item is InstapaperBookmark => item.type === 'bookmark');
@@ -58,7 +48,7 @@ export default async function ArticlePage({
     if (!bookmark) {
       error = 'Article not found.';
     } else {
-      content = await getBookmarkText(token, secret, id);
+      content = await getBookmarkText(id);
     }
   } catch (err: unknown) {
     error = err instanceof Error ? err.message : 'An unexpected error occurred';
