@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { getOldBookmarks, refreshArticles } from '@/app/actions';
 
 /**
@@ -8,11 +8,13 @@ import { getOldBookmarks, refreshArticles } from '@/app/actions';
  * Displays a date input and a button that opens a progress modal.
  */
 export function ArchiveOldForm() {
-  const [date, setDate] = useState(() => {
+  const [date, setDate] = useState('');
+
+  useEffect(() => {
     const d = new Date();
     d.setMonth(d.getMonth() - 3);
-    return d.toISOString().split('T')[0];
-  });
+    setDate(d.toISOString().split('T')[0]);
+  }, []);
   const [status, setStatus] = useState<'idle' | 'loading' | 'processing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
