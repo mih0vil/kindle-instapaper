@@ -6,6 +6,13 @@ import { getConfig } from '@/lib/config';
 import { processArticleAndCalculateSize } from '@/lib/article-size';
 
 /**
+ * An article larger than this after compression can never fit in a bulk email
+ * (Postmark's attachment limit is 10 MB) and would otherwise block every
+ * subsequent bulk run. Such articles are archived unsent instead.
+ */
+const MAX_SINGLE_ARTICLE_BYTES = 8 * 1024 * 1024;
+
+/**
  * Downgrades heading levels in HTML content (h1 -> h2, h2 -> h3, etc.).
  */
 function transformHeadings(html: string): string {
@@ -76,6 +83,8 @@ async function archiveBookmarks(
  * Sends the N most recent unread articles combined into a single DOCX file.
  * N is controlled by the BULK_SEND_LIMIT environment variable (default: 20).
  * Calculates article and image sizes and sends a smaller bulk if the total size exceeds safety limits.
+ * Articles that individually exceed MAX_SINGLE_ARTICLE_BYTES after compression are archived
+ * without being sent, since they could never fit in a bulk email.
  */
 export async function GET() {
   try {
@@ -108,9 +117,21 @@ export async function GET() {
     let totalEstimatedSize = 10 * 1024; // ~10KB TOC and structural wrapper overhead
     const selectedBookmarks: InstapaperBookmark[] = [];
     const selectedContents: string[] = [];
+    const oversizedBookmarks: InstapaperBookmark[] = [];
 
     for (let i = 0; i < bookmarks.length; i++) {
       const articleSize = processedArticles[i].estimatedSizeBytes;
+
+      // An article this large can never fit in a bulk email on its own - skip it and
+      // archive it below so it doesn't keep blocking every future bulk run.
+      if (articleSize > MAX_SINGLE_ARTICLE_BYTES) {
+        console.log(
+          `Article "${bookmarks[i].title}" is ${articleSize} bytes after compression, exceeding the ` +
+          `${MAX_SINGLE_ARTICLE_BYTES} byte single-article limit. Archiving without sending.`
+        );
+        oversizedBookmarks.push(bookmarks[i]);
+        continue;
+      }
 
       if (selectedBookmarks.length > 0 && totalEstimatedSize + articleSize > config.MAX_BULK_ATTACHMENT_BYTES) {
         console.log(
@@ -125,7 +146,13 @@ export async function GET() {
       totalEstimatedSize += articleSize;
     }
 
+    // Oversized articles are archived unconditionally - they were never going to be sendable.
+    if (oversizedBookmarks.length > 0) {
+      await archiveBookmarks(oversizedBookmarks, parallelLimit);
+    }
+
     if (selectedBookmarks.length === 0) {
+      revalidatePath('/');
       return NextResponse.json({ error: 'No articles could fit within the size limit' }, { status: 400 });
     }
 

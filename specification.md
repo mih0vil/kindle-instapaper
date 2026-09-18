@@ -70,6 +70,7 @@
 * When processing articles, application must calculate the size of the articles and images.
     * Email attachments are limited to 10 MB by Postmark.
     * If the cumulative size of articles and images in the bulk exceeds the maximum safe attachment limit, the application must send a smaller bulk of articles that fit within the size limit.
+    * If a single article's size after compression exceeds 8 MB, it can never fit in a bulk email on its own. The application must archive it without sending it, so it doesn't keep blocking every future bulk run.
 * Each article should be represented with:
     * Title in <h1> tag
     * Article content below title. The content should be transformed in a way that all <h1..6> tags are converted to <h2..6> tags, e.g. <h2> becomes <h3>, etc.
